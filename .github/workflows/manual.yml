@@ -1,0 +1,308 @@
+# This is a basic workflow that is manually triggered
+# Getting started with a workflow
+To help you get started, this guide shows you some basic examples. For the full GitHub Actions documentation on workflows, see "Configuring workflows."
+
+Customizing when workflow runs are triggered
+Set your workflow to run on push events to the main and release/* branches
+
+on:
+  push:
+    branches:
+    - main
+    - release/*
+Set your workflow to run on pull_request events that target the main branch
+
+on:
+  pull_request:
+    branches:
+    - main
+Set your workflow to run every day of the week from Monday to Friday at 2:00 UTC
+
+on:
+  schedule: 
+  - cron: "0 2 * * 1-5"
+For more information, see "Events that trigger workflows."
+
+Manually running a workflow
+To manually run a workflow, you can configure your workflow to use the workflow_dispatch event. This enables a "Run workflow" button on the Actions tab.
+
+on:
+  workflow_dispatch:
+For more information, see "Manually running a workflow."
+
+Running your jobs on different operating systems
+GitHub Actions provides hosted runners for Linux, Windows, and macOS.
+
+To set the operating system for your job, specify the operating system using runs-on:
+
+jobs:              \
+- name: Download a Build Artifact
+  uses: actions/download-artifact@v4.1.8
+  with:
+    # Name of the artifact to download. If unspecified, all artifacts for the run are downloaded.
+    name: # optional
+    # Destination path. Supports basic tilde expansion. Defaults to $GITHUB_WORKSPACE
+    path: # optional
+    # A glob pattern matching the artifacts that should be downloaded. Ignored if name is specified.
+    pattern: # optional
+    # When multiple artifacts are matched, this changes the behavior of the destination directories. If true, the downloaded artifacts will be in the same directory specified by path. If false, the downloaded artifacts will be extracted into individual named directories within the specified path.
+    merge-multiple: # optional, default is false
+    # The GitHub token used to authenticate with the GitHub API. This is required when downloading artifacts from a different repository or from a different workflow run. If this is not specified, the action will attempt to download artifacts from the current repository and the current workflow run.
+    github-token: # optional
+    # The repository owner and the repository name joined together by "/". If github-token is specified, this is the repository that artifacts will be downloaded from.
+    repository: # optional, default is ${{ github.repository }}
+    # The id of the workflow run where the desired download artifact was uploaded from. If github-token is specified, this is the run that artifacts will be downloaded from.
+    run-id: # optional, default is ${{ github.run_id }}
+                        
+- name: ServiceNow CI/CD Activate Plugin
+  # You may pin to the exact commit or the version.
+  # uses: ServiceNow/sncicd-plugin-activate@a12a95b41b8e026f9107d0c38f22245a5f4cf8d7
+  uses: ServiceNow/sncicd-plugin-activate@2.0.0
+  with:
+    # Plugin ID to be installed
+    pluginID: 
+               
+- name: First interaction
+  uses: actions/first-interaction@v1.3.0
+  with:            
+  - name: Setup .NET Core SDK
+  uses: actions/setup-dotnet@v4.2.0
+  with:
+    # Optional SDK version(s) to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x, 3.x, 6.0.2xx
+    dotnet-version: # optional
+    # Optional quality of the build. The possible values are: daily, signed, validated, preview, ga.
+    dotnet-quality: # optional
+    # Optional global.json location, if your global.json isn't located in the root of the repo.
+    global-json-file: # optional
+    # Optional package source for which to set up authentication. Will consult any existing NuGet.config in the root of the repo and provide a temporary NuGet.config using the NUGET_AUTH_TOKEN environment variable as a ClearTextPassword
+    source-url: # optional
+    # Optional OWNER for using packages from GitHub Package Registry organizations/users other than the current repository's owner. Only used if a GPR URL is also provided in source-url
+    owner: # optional
+    # Optional NuGet.config location, if your NuGet.config isn't located in the root of the repo.
+    config-file: # optional
+    # Optional input to enable caching of the NuGet global-packages folder
+    cache: # optional
+    # Used to specify the path to a dependency file: packages.lock.json. Supports wildcards or a list of file names for caching multiple dependencies.
+    cache-dependency-path: # optional
+          
+    # Token for the repository. Can be passed in using {{ secrets.GITHUB_TOKEN }}
+    repo-token: 
+    # Comment to post on an individual's first issue
+    issue-message: # optional
+    # Comment to post on an individual's first pull request
+    pr-message: # optional
+          
+  my_job:
+    name: deploy to staging
+    runs-on: ubuntu-22.04
+The available virtual machine types are:
+
+ubuntu-latest, ubuntu-22.04, or ubuntu-20.04
+windows-latest, windows-2022, or windows-2019
+macos-latest, macos-13, or macos-12
+For more information, see "Virtual environments for GitHub Actions."
+
+Using an action
+Actions are reusable units of code that can be built and distributed by anyone on GitHub. You can find a variety of actions in GitHub Marketplace, and also in the official Actions repository.
+
+To use an action, you must specify the repository that contains the action. We also recommend that you specify a Git tag to ensure you are using a released version of the action.
+
+- name: Setup Node
+  uses: actions/setup-node@v4
+  with:
+    node-version: '20.x'
+For more information, see "Workflow syntax for GitHub Actions."
+
+Running a command
+You can run commands on the job's virtual machine.
+
+- name: Install Dependencies
+  run: npm install
+For more information, see "Workflow syntax for GitHub Actions."
+
+Running a job across a matrix of operating systems and runtime versions
+You can automatically run a job across a set of different values, such as different versions of code libraries or operating systems.
+
+For example, this job uses a matrix strategy to run across 3 versions of Node and 3 operating systems:
+
+jobs:
+  test:
+    name: Test on node ${{ matrix.node_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node_version: ['18.x', '20.x']
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node_version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node_version }}
+
+    - name: npm install, build and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm test
+For more information, see "Workflow syntax for GitHub Actions."
+
+Running steps or jobs conditionally
+GitHub Actions supports conditions on steps and jobs using data present in your workflow context.
+
+For example, to run a step only as part of a push and not in a pull_request, you can specify a condition in the if: property based on the event name:
+
+steps:             
+- name: Setup Node.js environment
+  uses: actions/setup-node@v4.2.0
+  with:
+    # Set always-auth in npmrc.
+    always-auth: # optional, default is false
+    # Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.
+    node-version: # optional
+    # File containing the version Spec of the version to use.  Examples: package.json, .nvmrc, .node-version, .tool-versions.
+    node-version-file: # optional
+    # Target architecture for Node to use. Examples: x86, x64. Will use system architecture by default.
+    architecture: # optional
+    # Set this option if you want the action to check for the latest available version that satisfies the version spec.
+    check-latest: # optional
+    # Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN.
+    registry-url: # optional
+    # Optional scope for authenticating against scoped registries. Will fall back to the repository owner when using the GitHub Packages registry (https://npm.pkg.github.com/).
+    scope: # optional
+    # Used to pull node distributions from node-versions. Since there's a default, this is typically not supplied by the user. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.
+    token: # optional, default is ${{ github.server_url == 'https://github.com' && github.token || '' }}
+    # Used to specify a package manager for caching in the default directory. Supported values: npm, yarn, pnpm.
+    cache: # optional
+    # Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc. Supports wildcards or a list of file names for caching multiple dependencies.
+    cache-dependency-path: # optional
+          
+- run: npm publish
+  if: github.event_name == 'push'
+For more information, see "Contexts and expression syntax for GitHub Actions."
+name: Manual workflow
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on: 
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs: 
+      name:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'Person to greet'
+        # Default value if no value is explicitly provided
+        default: 'World'
+        # Input has to be provided for the workflow to run
+        required: true
+        # The data type of the input
+        type: string
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:                   
+- name: Load runner information
+  # You may pin to the exact commit or the version.
+  # uses: devops-actions/load-runner-info@7f8c07227aa6176e94e4eeb912016bb0a9d33796
+  uses: devops-actions/load-runner-info@v1.0.10
+  with:
+    # Slug of the organization to analyze.
+    organization: 
+    # Slug of the repository to analyze.
+    repo: # optional
+    # Access token to use for analysis with either admin:org or repo owner if you run it against a repo
+    accessToken: 
+               
+- name: Setup Go environment
+  uses: actions/setup-go@v5.3.0
+  with: 
+    # The Go version to download (if necessary) and use. Supports semver spec and ranges. Be sure to enclose this option in single quotation marks.
+    go-version: # optional
+    # Path to the go.mod or go.work file.
+    go-version-file: # optional
+    # Set this option to true if you want the action to always check for the latest available version that satisfies the version spec
+    check-latest: # optional
+    # Used to pull Go distributions from go-versions. Since there's a default, this is typically not supplied by the user. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.
+    token: # optional, default is ${{ github.server_url == 'https://github.com' && github.token || '' }}
+    # Used to specify whether caching is needed. Set to true, if you'd like to enable caching.
+    cache: # optional, default is true
+    # Used to specify the path to a dependency file - go.sum
+    cache-dependency-path: # optional
+    # Target architecture for Go to use. Examples: x86, x64. Will use system architecture by default.
+    architecture: # optional
+          
+  # This workflow contains a single job called "greet"
+  greet:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:               
+    - name: github-action-auto-format
+  # You may pin to the exact commit or the version.
+  # uses: cloudposse/github-action-auto-format@970af4c15a720047204400fe5b5ae52fb2991e9b
+  uses: cloudposse/github-action-auto-format@v0.12.0
+  with:
+    # The path on the github-runner where the auto-format action scripts are checked out at runtime
+    actions-files-checkout-path: # optional, default is github-action-auto-format
+    # GitHub username for writing new commits
+    bot-name: # optional, default is cloudpossebot
+    # Email address associated with the GitHub user for writing new commits
+    bot-email: # optional
+    # Name of formatting task to execute. (Options include: readme, github, terraform, and context.)
+    format-task: 
+    # GitHub Token for use in `github_format.sh` and PR creation steps. This token must be granted `workflows` permissions.
+    workflow-token: 
+                   
+    - name: Cache
+  uses: actions/cache@v4.2.0
+  with:
+    # A list of files, directories, and wildcard patterns to cache and restore
+    path: 
+    # An explicit key for restoring and saving the cache
+    key: 
+    # An ordered multiline string listing the prefix-matched keys, that are used for restoring stale cache if no cache hit occurred for key. Note `cache-hit` returns false in this case.
+    restore-keys: # optional
+    # The chunk size used to split up large files during upload, in bytes
+    upload-chunk-size: # optional
+    # An optional boolean when enabled, allows windows runners to save or restore caches that can be restored or saved respectively on other platforms
+    enableCrossOsArchive: # optional, default is false
+    # Fail the workflow if cache entry is not found
+    fail-on-cache-miss: # optional, default is false
+    # Check if a cache entry exists for the given input(s) (key, restore-keys) without downloading the cache
+    lookup-only: # optional, default is false
+    # Run the post step to save the cache even if another step before fails
+    save-always: # optional, default is false
+          
+    # Runs a single command using the runners shell
+                - name: LocalStack GitHub Actions Login
+  # You may pin to the exact commit or the version.
+  # uses: localstack/localstack-github-actions-login@55cb73dc128e0bc83217ca742569d28579e3c064
+  uses: localstack/localstack-github-actions-login@v0.1.0
+  with:
+    # Username
+    email: 
+    # Password
+    password: 
+          
+    - name: Send greeting
+      run: echo "            - name: Deploy to IBM Cloud Foundry
+  # You may pin to the exact commit or the version.
+  # uses: IBM/cloudfoundry-deploy@fcb5a74cb36e7cd0bfe9f9b5d9d57aab85d00bd1
+  uses: IBM/cloudfoundry-deploy@v2.1
+  with:
+    # IBM Cloud API key
+    IBM_CLOUD_API_KEY: 
+    # IBM Cloud Foundry API endpoint
+    IBM_CLOUD_CF_API: 
+    # IBM Cloud Foundry organization name
+    IBM_CLOUD_CF_ORG: 
+    # IBM Cloud Foundry space name
+    IBM_CLOUD_CF_SPACE: 
+    # App Manifest file
+    APP_MANIFEST_FILE: # optional, default is manifest.yml
+    # App variables file
+    APP_VARS_FILE: # optional
+    # IBM Cloud Foundry resource group
+    RESOURCE_GROUP: # optional
+           ${{ inputs.name }}"
